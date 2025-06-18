@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dicoding Stories - Berbagi Cerita Developer</title>
+    <meta name="description" content="Platform berbagi cerita seputar Dicoding untuk para developer">
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
+    <link rel="icon" href="/icons/icon-48x48.png">
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    
+    <!-- Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📖%3C/text%3E%3C/svg%3E">
+    
+    <!-- PWA Meta -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <header role="banner">
+        <nav role="navigation" aria-label="Main navigation">
+        <div class="logo">
+            <i class="fas fa-book-open" aria-hidden="true"></i>
+            <span>Dicoding Stories</span>
+        </div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="#home" class="nav-link" data-page="home">
+                <i class="fas fa-home" aria-hidden="true"></i> Beranda
+            </a></li>
+            <li><a href="#stories" class="nav-link" data-page="stories">
+                <i class="fas fa-images" aria-hidden="true"></i> Stories
+            </a></li>
+            <li><a href="#add-story" class="nav-link" data-page="add-story">
+                <i class="fas fa-plus" aria-hidden="true"></i> Tambah Story
+            </a></li>
+            <li id="auth-nav-item">
+                <a href="#login" class="nav-link" id="auth-nav-link" data-page="login">
+                    <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login
+                </a>
+            </li>
+            <li>
+                <button id="notif-toggle-btn" class="btn btn-secondary" style="margin-left:12px;min-width:40px;" aria-label="Aktifkan/Nonaktifkan Notifikasi">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </li>
+        </ul>
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+    </header>
+
+    <main id="main-content" role="main">
+        <!-- Home Page -->
+        <section id="home-page" class="page-section active" role="main" aria-labelledby="home-title">
+            <div class="container home-instagram-style">
+                <div class="hero">
+                    <h1 id="home-title">Berbagi Cerita Developer</h1>
+                    <p>Platform terbaik untuk berbagi pengalaman, tips, dan inspirasi seputar dunia programming bersama komunitas Dicoding</p>
+                    <button class="cta-button" onclick="navigateToPage('stories')">
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        Jelajahi Stories
+                    </button>
+                </div>
+                <div class="home-feed">
+                    <div class="home-welcome-card glass-card">
+                        <h2>Selamat Datang di Dicoding Stories!</h2>
+                        <p>Bagikan pengalaman, tips, dan inspirasi seputar dunia programming. Temukan teman baru, ikuti komunitas, dan dapatkan motivasi setiap hari.</p>
+                        <ul class="home-feature-list">
+                            <li><i class="fas fa-users"></i> Temukan komunitas developer</li>
+                            <li><i class="fas fa-lightbulb"></i> Dapatkan inspirasi & motivasi</li>
+                            <li><i class="fas fa-share"></i> Bagikan pengalamanmu dengan mudah</li>
+                        </ul>
+                        <button class="cta-button" onclick="navigateToPage('add-story')">
+                            <i class="fas fa-plus"></i> Tulis Cerita Baru
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stories Page -->
+        <section id="stories-page" class="page-section" role="main" aria-labelledby="stories-title">
+            <div class="container">
+                <h1 id="stories-title">Semua Stories</h1>
+                <div class="glass-card">
+                    <div class="map-container" id="stories-map" role="img" aria-label="Peta lokasi stories"></div>
+                </div>
+                <div id="stories-loading" class="loading" style="display: none;" role="status" aria-label="Memuat stories">
+                    <div class="spinner"></div>
+                </div>
+                <div class="stories-grid" id="stories-container">
+                    <!-- Stories will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Add Story Page -->
+        <section id="add-story-page" class="page-section" role="main" aria-labelledby="add-story-title" style="display: none;">
+            <div class="container">
+                <h1 id="add-story-title">Tambah Story Baru</h1>
+                <div class="glass-card">
+                    <form id="add-story-form" novalidate>
+                        <div class="form-group">
+                            <label for="story-description" class="form-label">Deskripsi Story *</label>
+                            <textarea 
+                                id="story-description" 
+                                name="description" 
+                                class="form-input form-textarea" 
+                                placeholder="Ceritakan pengalaman programming Anda..."
+                                required
+                                aria-describedby="description-help"
+                            ></textarea>
+                            <small id="description-help" class="form-help">Minimal 10 karakter</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Foto Story *</label>
+                            <div class="camera-container">
+                                <video id="camera-preview" class="camera-preview" autoplay muted playsinline style="display: none;" aria-label="Preview kamera"></video>
+                                <canvas id="captured-photo" class="camera-preview" style="display: none;" aria-label="Foto yang diambil"></canvas>
+                                <img id="photo-preview" class="camera-preview" style="display: none;" alt="Preview foto yang dipilih">
+                                
+                                <div class="camera-controls">
+                                    <button type="button" id="start-camera" class="btn btn-primary">
+                                        <i class="fas fa-camera" aria-hidden="true"></i> Buka Kamera
+                                    </button>
+                                    <button type="button" id="capture-photo" class="btn btn-secondary" style="display: none;">
+                                        <i class="fas fa-camera-retro" aria-hidden="true"></i> Ambil Foto
+                                    </button>
+                                    <button type="button" id="retake-photo" class="btn btn-secondary" style="display: none;">
+                                        <i class="fas fa-redo" aria-hidden="true"></i> Ambil Ulang
+                                    </button>
+                                    <input type="file" id="file-input" accept="image/*" style="display: none;" aria-label="Pilih file foto">
+                                    <button type="button" id="choose-file" class="btn btn-secondary">
+                                        <i class="fas fa-folder-open" aria-hidden="true"></i> Pilih File
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Lokasi (Opsional)</label>
+                            <div class="map-container" id="location-map" role="img" aria-label="Peta untuk memilih lokasi"></div>
+                            <p class="form-help">Klik pada peta untuk menentukan lokasi</p>
+                            <div id="selected-location" style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submit-story">
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i> Kirim Story
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Login Page -->
+        <section id="login-page" class="page-section" role="main" aria-labelledby="login-title">
+            <div class="container">
+                <div class="glass-card" style="max-width: 400px; margin: 48px auto 0 auto;">
+                    <form id="login-form" novalidate>
+                        <h1 id="login-title" style="text-align:center; margin-bottom: 1.5rem;">Login</h1>
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email *</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                class="form-input" 
+                                placeholder="your@email.com"
+                                required
+                                aria-describedby="email-help"
+                                autocomplete="email"
+                            >
+                            <small id="email-help" class="form-help">Gunakan email yang telah terdaftar</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password *</label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-input" 
+                                placeholder="Password Anda"
+                                required
+                                aria-describedby="password-help"
+                                autocomplete="current-password"
+                            >
+                            <small id="password-help" class="form-help">Minimal 8 karakter</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="login-button">
+                            <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login
+                        </button>
+                    </form>
+
+                    <form id="register-form" novalidate style="display:none; margin-top: 0;">
+                        <h2 style="text-align:center; margin-bottom: 1rem;">Daftar Akun Baru</h2>
+                        <div class="form-group">
+                            <label for="register-name" class="form-label">Nama Lengkap *</label>
+                            <input 
+                                type="text" 
+                                id="register-name" 
+                                name="name" 
+                                class="form-input" 
+                                placeholder="Nama lengkap Anda"
+                                required
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email" class="form-label">Email *</label>
+                            <input 
+                                type="email" 
+                                id="register-email" 
+                                name="email" 
+                                class="form-input" 
+                                placeholder="your@email.com"
+                                required
+                                autocomplete="email"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password" class="form-label">Password *</label>
+                            <input 
+                                type="password" 
+                                id="register-password" 
+                                name="password" 
+                                class="form-input" 
+                                placeholder="Minimal 8 karakter"
+                                required
+                                minlength="8"
+                                autocomplete="new-password"
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="register-button">
+                            <i class="fas fa-user-plus" aria-hidden="true"></i> Daftar
+                        </button>
+                        <div id="register-toggle" style="text-align: center; margin-top: 1.5rem;">
+                            <p style="margin-bottom: 0.5rem;">Sudah punya akun?</p>
+                            <button type="button" class="btn btn-secondary" id="back-to-login" style="width: 100%; margin-top: 0;">
+                                <i class="fas fa-arrow-left"></i> Kembali ke Login
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="login-register-toggle" style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                        <p id="login-register-text">Belum punya akun?</p>
+                        <button type="button" class="btn btn-secondary" id="show-register-btn" style="margin-top: 0.5rem;">
+                            <i class="fas fa-user-plus" aria-hidden="true"></i> Daftar Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="not-found-page" class="page-section">
+            <div class="container">
+                <div class="glass-card not-found-container">
+                    <picture>
+                        <source srcset="/icons/404.webp" type="image/webp">
+                        <img src="/icons/404.png" alt="404 Not Found" class="not-found-gif">
+                    </picture>
+                    
+                    <h1 class="not-found-title">Halaman Tidak Ditemukan</h1>
+                    <p class="not-found-message">Sepertinya Anda tersesat di dunia digital</p>
+                    
+                    <div class="not-found-actions">
+                        <button class="btn btn-primary" onclick="navigateToPage('home')">
+                            <i class="fas fa-home"></i> Kembali ke Beranda
+                        </button>
+                        <button class="btn btn-secondary" onclick="history.back()">
+                            <i class="fas fa-arrow-left"></i> Kembali Sebelumnya
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="glass-footer">
+    <div class="footer-content">
+        <div class="footer-logo">
+        <i class="fas fa-book-open"></i>
+        <span>Dicoding Stories</span>
+        </div>
+        <div class="footer-legal">
+        <p>© 2023 All rights reserved</p>
+        <div class="legal-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </div>
+        </div>
+    </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // Tampilkan section add-story-page hanya jika hash adalah #add-story
+        window.addEventListener('hashchange', function() {
+            const addStorySection = document.getElementById('add-story-page');
+            if (window.location.hash === '#add-story') {
+                addStorySection.style.display = '';
+            } else {
+                addStorySection.style.display = 'none';
+            }
+        });
+        // Inisialisasi saat load pertama
+        window.addEventListener('DOMContentLoaded', function() {
+            const addStorySection = document.getElementById('add-story-page');
+            if (window.location.hash === '#add-story') {
+                addStorySection.style.display = '';
+            } else {
+                addStorySection.style.display = 'none';
+            }
+        });
+
+        // Toggle login/register form
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegisterBtn = document.getElementById('show-register-btn');
+        const backToLoginBtn = document.getElementById('back-to-login');
+        const loginRegisterToggle = document.getElementById('login-register-toggle');
+
+        showRegisterBtn.addEventListener('click', function() {
+            loginForm.style.display = 'none';
+            registerForm.style.display = '';
+            loginRegisterToggle.style.display = 'none';
+        });
+        backToLoginBtn.addEventListener('click', function() {
+            loginForm.style.display = '';
+            registerForm.style.display = 'none';
+            loginRegisterToggle.style.display = '';
+        });
+
+        // Notifikasi toggle logic
+        const notifBtn = document.getElementById('notif-toggle-btn');
+        let notifActive = false;
+
+        function updateNotifBtn(state) {
+            notifActive = state;
+            notifBtn.innerHTML = notifActive ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-bell-slash"></i>';
+        }
+
+        notifBtn.addEventListener('click', async () => {
+            if (!('Notification' in window)) {
+                alert('Browser tidak mendukung notifikasi.');
+                return;
+            }
+            if (Notification.permission === 'denied') {
+                alert('Notifikasi diblokir di browser. Silakan aktifkan di pengaturan browser.');
+                return;
+            }
+            notifBtn.disabled = true;
+            notifBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                if (!notifActive) {
+                    // Subscribe
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') throw new Error('Izin notifikasi ditolak');
+                    if ('serviceWorker' in navigator) {
+                        const reg = await navigator.serviceWorker.ready;
+                        const app = window.app || (window.app = new App());
+                        await app.initNotifications();
+                        updateNotifBtn(true);
+                    }
+                } else {
+                    // Unsubscribe
+                    if ('serviceWorker' in navigator) {
+                        const reg = await navigator.serviceWorker.ready;
+                        const subs = await reg.pushManager.getSubscription();
+                        if (subs) await subs.unsubscribe();
+                        updateNotifBtn(false);
+                    }
+                }
+            } catch (e) {
+                alert('Gagal mengubah status notifikasi: ' + e.message);
+            }
+            notifBtn.disabled = false;
+        });
+
+        // Inisialisasi status tombol saat load
+        window.addEventListener('DOMContentLoaded', async () => {
+            if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.ready;
+                const subs = await reg.pushManager.getSubscription();
+                updateNotifBtn(!!subs);
+            }
+        });
+    </script>
+    <script src="app.bundle.js"></script>
+</body>
+</html>
