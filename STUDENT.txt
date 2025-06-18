@@ -1,2 +1,1 @@
-APP_URL=https://your-app-url.netlify.app
-MAP_SERVICE_API_KEY=<api_key>
+https://pancanurull.github.io/DicodingStory/
