@@ -57,16 +57,45 @@ class App {
         this.router.addRoute('', async () => {
             this.router.navigate('home');
         });
-    }
-
-    setupMobileMenu() {
+    }    setupMobileMenu() {
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const navLinks = document.getElementById('nav-links');
         
+        // Handle menu button click
         mobileMenuBtn.addEventListener('click', () => {
             const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
             mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
+            mobileMenuBtn.classList.toggle('active');
             navLinks.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('#mobile-menu-btn') && 
+                !event.target.closest('#nav-links') && 
+                navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+                mobileMenuBtn.classList.remove('active');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Close menu when clicking on a link
+        navLinks.addEventListener('click', (event) => {
+            if (event.target.tagName === 'A') {
+                navLinks.classList.remove('active');
+                mobileMenuBtn.classList.remove('active');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+                mobileMenuBtn.classList.remove('active');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            }
         });
     }
 

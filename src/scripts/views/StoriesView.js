@@ -61,24 +61,31 @@ updateMapWithStories(stories) {
         document.getElementById('stories-loading').style.display = 'none';
     }
 
-    renderAllStories(stories) {
+    async renderAllStories(stories) {
         if (!this.storiesContainer) return;
-
         if (!stories || stories.length === 0) {
             this.renderEmptyState();
             return;
         }
-
-        // Clear previous content
         this.storiesContainer.innerHTML = '';
-
-        // Create and append story cards
-        stories.forEach(story => {
-            const storyCard = new StoryCard(story);
+        // Cek status favorit untuk setiap story
+        for (const story of stories) {
+            const isFavorite = await this.model.storyDB.isFavorite(story.id);
+            const storyCard = new StoryCard(story, isFavorite, async (storyObj, willBeFavorite, btn) => {
+                if (willBeFavorite) {
+                    await this.model.storyDB.saveFavorite(storyObj);
+                    btn.style.color = 'gold';
+                    btn.querySelector('i').classList.remove('far');
+                    btn.querySelector('i').classList.add('fas');
+                } else {
+                    await this.model.storyDB.deleteFavorite(storyObj.id);
+                    btn.style.color = '#aaa';
+                    btn.querySelector('i').classList.remove('fas');
+                    btn.querySelector('i').classList.add('far');
+                }
+            });
             this.storiesContainer.appendChild(storyCard.render());
-        });
-
-        // Update map with story locations
+        }
         this.updateMapWithStories(stories.filter(s => s.lat && s.lon));
     }
 

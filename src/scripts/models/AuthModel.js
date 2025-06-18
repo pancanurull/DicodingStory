@@ -5,36 +5,34 @@ export class AuthModel {
     constructor() {
         this.apiService = new ApiService();
         this.storageService = new StorageService();
-    }
-
-    async login(credentials) {
+    }    async login(credentials) {
         try {
+            // Validate email and password
             const validationErrors = this.validateLoginData(credentials);
             if (validationErrors.length > 0) {
                 throw new Error(validationErrors[0]);
             }
 
+            // Try login
             const response = await this.apiService.login(credentials);
-            const validatedResponse = this.apiService.validateResponse(response);
+            
+            // Validate response
+            if (!response || !response.loginResult || !response.loginResult.token) {
+                throw new Error('Login gagal: Response tidak valid dari server');
+            }            const { token, userId, name } = response.loginResult;
+            
+            this.storageService.saveToken(token);
+            this.storageService.saveUser({
+                userId,
+                name,
+                email: credentials.email
+            });
 
-            if (validatedResponse.loginResult) {
-                const { token, userId, name } = validatedResponse.loginResult;
-                
-                this.storageService.saveToken(token);
-                this.storageService.saveUser({
-                    userId,
-                    name,
-                    email: credentials.email
-                });
-
-                return {
-                    success: true,
-                    user: { userId, name, email: credentials.email },
-                    message: 'Login berhasil!'
-                };
-            }
-
-            throw new Error('Data login tidak valid.');
+            return {
+                success: true,
+                user: { userId, name, email: credentials.email },
+                message: 'Login berhasil!'
+            };
         } catch (error) {
             console.error('Login failed:', error);
             throw new Error(error.message || 'Login gagal. Periksa email dan password Anda.');

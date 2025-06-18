@@ -36,11 +36,19 @@ export class ApiService {
         config.headers['Content-Type'] = 'application/json';
       }
 
-      const response = await fetch(url, config);
-
-      if (!response.ok) {
+      const response = await fetch(url, config);      if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('Email atau password salah');
+        } else if (response.status === 404) {
+          throw new Error('Email belum terdaftar');
+        } else if (response.status === 400) {
+          throw new Error(errorData.message || 'Data login tidak valid');
+        }
+        
+        throw new Error(errorData.message || `Error: ${response.status} ${response.statusText}`);
       }
 
       return await response.json();
@@ -57,11 +65,16 @@ export class ApiService {
       body: JSON.stringify(userData)
     });
   }
-
   async login(credentials) {
     return this.request('/login', {
       method: 'POST',
-      body: JSON.stringify(credentials)
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.password
+      })
     });
   }
 
@@ -111,11 +124,19 @@ export class ApiService {
 
   // 🔔 Web Push Notification
   async subscribeNotification(subscriptionData, token) {
-    return this.request('/notifications/subscribe', {
-      method: 'POST',
-      headers: this.getAuthHeaders(token),
-      body: JSON.stringify(subscriptionData)
-    });
+    try {
+      console.log('[API] Sending subscription data:', subscriptionData);
+      const response = await this.request('/notifications/subscribe', {
+        method: 'POST',
+        headers: this.getAuthHeaders(token),
+        body: JSON.stringify(subscriptionData)
+      });
+      console.log('[API] Subscription response:', response);
+      return response;
+    } catch (error) {
+      console.error('[API] Subscription error:', error);
+      throw error;
+    }
   }
 
   async unsubscribeNotification(subscriptionData, token) {

@@ -87,12 +87,15 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('push', (event) => {
+  console.log('[SW] Push event received');
   const data = event.data?.json() || {
     title: 'Dicoding Stories',
     body: 'Anda memiliki notifikasi baru',
     icon: '/images/icon-192x192.png',
     badge: '/images/icon-72x72.png'
   };
+  
+  console.log('[SW] Push notification data:', data);
 
   event.waitUntil(
     self.registration.showNotification(data.title, {

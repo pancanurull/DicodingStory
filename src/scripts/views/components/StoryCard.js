@@ -1,6 +1,8 @@
 export class StoryCard {
-    constructor(story) {
+    constructor(story, isFavorite = false, onFavoriteToggle = null) {
         this.story = story;
+        this.isFavorite = isFavorite;
+        this.onFavoriteToggle = onFavoriteToggle; // callback
     }
 
     render() {
@@ -13,6 +15,10 @@ export class StoryCard {
         const hasLocation = this.story.lat && this.story.lon;
         const locationIcon = hasLocation ? 
             '<i class="fas fa-map-marker-alt" aria-hidden="true"></i>' : '';
+
+        // Favorite icon
+        const favClass = this.isFavorite ? 'fas' : 'far';
+        const favColor = this.isFavorite ? 'gold' : '#aaa';
 
         card.innerHTML = `
             <img 
@@ -30,11 +36,20 @@ export class StoryCard {
                 <div class="story-card-desc">${this.story.description || 'Tidak ada deskripsi'}</div>
                 ${hasLocation ? `<div class="story-card-location">${locationIcon} Lokasi tersedia</div>` : ''}
                 <div class="story-card-actions">
-                    <button aria-label="Suka cerita ini"><i class="fas fa-heart"></i></button>
+                    <button class="favorite-btn" aria-label="Favoritkan cerita ini" style="color:${favColor}"><i class="${favClass} fa-star"></i></button>
                     <button aria-label="Bagikan cerita"><i class="fas fa-share-alt"></i></button>
                 </div>
             </div>
         `;
+
+        // Favorite button event
+        const favBtn = card.querySelector('.favorite-btn');
+        if (favBtn && typeof this.onFavoriteToggle === 'function') {
+            favBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.onFavoriteToggle(this.story, !this.isFavorite, favBtn);
+            });
+        }
         return card;
     }
 }
