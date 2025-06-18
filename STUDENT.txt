@@ -1,1 +1,2 @@
-https://pancanurull.github.io/DicodingStory/
+Github : https://pancanurull.github.io/DicodingStory/
+Netlify : menyusul di bagian komentar submit tugas
